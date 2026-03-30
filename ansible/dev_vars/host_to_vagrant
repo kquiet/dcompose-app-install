@@ -1,0 +1,4 @@
+---
+ansible_private_key_file: "~/.ssh/id-rsa-dcompose-app-install"
+ansible_user: "{{ lookup('pipe', 'whoami') }}"
+package_state: "latest"

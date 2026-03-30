@@ -1,0 +1,7 @@
+---
+app_src_path: "/app_src"
+app_dest_path: "/opt/app"
+docker_compose_base_command: "docker compose -p dcompose-app-install"
+docker_compose_check_running_command: "{{ docker_compose_base_command }} ps -a --format 'table {{ '{{' }}.Name{{ '}}' }}\t{{ '{{' }}.Image{{ '}}' }}\t{{ '{{' }}.Service{{ '}}' }}\t{{ '{{' }}.CreatedAt{{ '}}' }}\t{{ '{{' }}.Status{{ '}}' }}'"
+docker_compose_stop_command: "{{ docker_compose_base_command }} down"
+docker_compose_start_command: "{{ docker_compose_base_command }} up -d"

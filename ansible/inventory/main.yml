@@ -1,0 +1,39 @@
+---
+all:
+  vars:
+    ansible_private_key_file: "~/.ssh/{{ lookup('env', 'SSH_KEY_FILE') | default('id_rsa', true) }}"
+    ansible_python_interpreter: "/usr/bin/python3"
+    ansible_user: "{{ lookup('env', 'REMOTE_USER') | default('root', true) }}"
+  children:
+    local:
+      vars:
+        ansible_connection: local
+      hosts:
+        local_host:
+          ansible_host: localhost
+    docker:
+      hosts:
+        docker_host:
+          ansible_host: host.docker.internal
+          ansible_port: 22
+    vagrant:
+      hosts:
+        vagrant_vm_01:
+          ansible_host: 192.168.56.10
+          ansible_port: 22
+        vagrant_vm_02:
+          ansible_host: 192.168.56.11
+          ansible_port: 22
+    proxy:
+      hosts:
+        proxied_host_01:
+          ansible_host: 8.8.8.8
+          ansible_port: 22
+      vars:
+        proxy_env:
+          http_proxy: http://172.17.0.1:3128
+          https_proxy: http://172.17.0.1:3128
+          HTTP_PROXY: http://172.17.0.1:3128
+          HTTPS_PROXY: http://172.17.0.1:3128
+          no_proxy: localhost,127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,::1
+          NO_PROXY: localhost,127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,::1

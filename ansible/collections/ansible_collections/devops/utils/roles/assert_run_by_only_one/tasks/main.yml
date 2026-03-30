@@ -1,0 +1,9 @@
+---
+- name: "Check if this job is limited to EXACTLY one host"
+  ansible.builtin.assert:
+    that:
+      - ansible_play_hosts | length == 1
+    fail_msg: |
+      This MUST be run against a single host.
+      It was run against {{ ansible_play_hosts | length }} hosts: {{ ansible_play_hosts }}
+      Please rerun with limited host.

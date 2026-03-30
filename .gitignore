@@ -1,0 +1,7 @@
+/.python-version
+/ansible/galaxy_roles/
+/ansible/galaxy_collections/
+/.vagrant/
+# /os_packages/
+# /container_images/
+/container_images/app/

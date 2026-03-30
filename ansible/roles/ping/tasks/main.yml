@@ -1,0 +1,16 @@
+---
+- name: Gather only the 'min' subset of facts
+  ansible.builtin.setup:
+    gather_subset:
+      - min
+- name: Print essential Host Information
+  ansible.builtin.debug:
+    var: host_summary
+  vars:
+    host_summary:
+      Hostname: "{{ ansible_hostname }}"
+      OS_Distribution: "{{ ansible_distribution }} ({{ ansible_distribution_version }})"
+      OS_Family: "{{ ansible_os_family }}"
+      Architecture: "{{ ansible_architecture }}"
+      Kernel_Version: "{{ ansible_kernel }}"
+      Python_Interpreter: "{{ ansible_python_interpreter }}"

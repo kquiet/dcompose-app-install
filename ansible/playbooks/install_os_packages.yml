@@ -1,0 +1,13 @@
+---
+- name: Ensure all machines have basic apt packages installed
+  hosts: all
+  become: true
+  gather_facts: false
+  environment: "{{ proxy_env if 'proxy' in group_names else {} }}"
+  roles:
+  - gather_basic_facts
+  - role: install_os_packages
+    vars:
+      try_apt_packages:
+      - ca-certificates
+      - curl

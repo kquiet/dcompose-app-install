@@ -1,0 +1,12 @@
+---
+- name: "Check if executing host '{{ inventory_hostname }}' is in the required group"
+  ansible.builtin.assert:
+    that:
+      - (group_names | intersect(required_groups)) | length > 0
+    fail_msg: |
+      This job was limited to {{ inventory_hostname }},
+      which is NOT in any of the required groups: {{ required_groups }}.
+      It is only in: {{ group_names }}.
+      Please re-run and limit to a correct host.
+  delegate_to: "{{ ansible_play_hosts[0] }}"
+  run_once: true

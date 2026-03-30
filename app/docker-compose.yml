@@ -1,0 +1,8 @@
+services:
+  dummy-verify:
+    image: alpine/ansible:2.18.6
+    command: ["echo", "Docker compose successfully verified."]
+    deploy:
+      restart_policy:
+        condition: on-failure
+        max_attempts: 1

@@ -1,0 +1,64 @@
+---
+- name: Set internal docker-compose file name
+  ansible.builtin.set_fact:
+    _docker_compose_file_name: "docker-compose.yml"
+
+- name: Check if docker-compose file exists in source (controller)
+  ansible.builtin.stat:
+    path: "{{ app_src_path }}/{{ _docker_compose_file_name }}"
+  delegate_to: localhost
+  register: compose_stat
+
+- name: Fail if docker-compose file is missing
+  ansible.builtin.fail:
+    msg: "Docker Compose file '{{ _docker_compose_file_name }}' not found in '{{ app_src_path }}'. Please ensure the application files are present."
+  when: not compose_stat.stat.exists
+
+- name: Check if application already exists at destination
+  ansible.builtin.stat:
+    path: "{{ app_dest_path }}/{{ _docker_compose_file_name }}"
+  register: dest_compose_stat
+
+- name: Check if existing docker compose application is running
+  ansible.builtin.shell: "{{ docker_compose_check_running_command }}"
+  args:
+    chdir: "{{ app_dest_path }}"
+  register: compose_ps_output
+  changed_when: false
+  failed_when: false
+  when: dest_compose_stat.stat.exists
+
+- name: Debug running docker compose containers
+  ansible.builtin.debug:
+    msg: "{{ compose_ps_output.stdout_lines | default([]) }}"
+  when:
+    - dest_compose_stat.stat.exists
+    - compose_ps_output.stdout_lines is defined
+
+- name: Stop and remove existing docker compose application
+  ansible.builtin.shell: "{{ docker_compose_stop_command }}"
+  args:
+    chdir: "{{ app_dest_path }}"
+  when:
+    - dest_compose_stat.stat.exists
+    - compose_ps_output.stdout_lines is defined
+    - compose_ps_output.stdout_lines | length > 1
+
+- name: Ensure destination directory exists
+  ansible.builtin.file:
+    path: "{{ app_dest_path }}"
+    state: directory
+    mode: '0755'
+
+- name: Copy application files to destination
+  ansible.posix.synchronize:
+    src: "{{ app_src_path }}/"
+    dest: "{{ app_dest_path }}/"
+    archive: true
+    use_ssh_args: true
+    ssh_connection_multiplexing: true
+
+- name: Start Docker Compose Application
+  ansible.builtin.shell: "{{ docker_compose_start_command }}"
+  args:
+    chdir: "{{ app_dest_path }}"

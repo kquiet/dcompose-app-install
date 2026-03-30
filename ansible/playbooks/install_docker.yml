@@ -1,0 +1,13 @@
+---
+- name: Install Docker Engine via Ansible Galaxy Role
+  hosts: all
+  gather_facts: false
+  become: true
+  vars:
+    docker_edition: 'ce'
+    docker_users:
+    - "{{ ansible_user }}"
+  environment: "{{ proxy_env if 'proxy' in group_names else {} }}"
+  roles:
+  - gather_basic_facts
+  - geerlingguy.docker

@@ -1,0 +1,10 @@
+---
+- name: "Run OS check"
+  ansible.builtin.include_role:
+    name: devops.utils.assert_run_in_os
+  vars:
+    required_os_families:
+    - "Debian"
+- name: "Ensure all machines have basic apt packages installed"
+  ansible.builtin.include_role:
+    name: devops.utils.try_apt_install

@@ -1,0 +1,83 @@
+name: Test Installation Scripts
+
+on:
+  push:
+    branches: [ "dev", "main" ]
+    paths-ignore:
+      - 'README.md'
+      - 'AGENTS.md'
+      - 'Vagrantfile'
+      - 'Dockerfile*'
+  pull_request:
+    branches: [ "main" ]
+    paths-ignore:
+      - 'README.md'
+      - 'AGENTS.md'
+      - 'Vagrantfile'
+      - 'Dockerfile*'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test-online:
+    name: Test Online Installation (Mode 1)
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-22.04]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          lfs: false
+
+      - name: Setup Install Environment
+        uses: ./.github/actions/setup-install-env
+
+      - name: Run Online Install Script
+        run: ./scripts/19_install_local_online.sh
+
+      - name: Verify Installation
+        uses: ./.github/actions/verify-install
+
+      - name: Run Online Install Script Again (Upgrade Simulation)
+        run: ./scripts/19_install_local_online.sh
+
+      - name: Verify Installation After Upgrade
+        uses: ./.github/actions/verify-install
+
+  test-offline:
+    name: Test Offline Installation (Mode 2)
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-22.04]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Setup Install Environment
+        uses: ./.github/actions/setup-install-env
+
+      - name: Configure Offline Environment
+        run: |
+          # Redirect standard repositories and registries to localhost to simulate offline environment
+          echo "127.0.0.1 archive.ubuntu.com security.ubuntu.com ports.ubuntu.com" | sudo tee -a /etc/hosts
+          echo "127.0.0.1 production.cloudflare.docker.com auth.docker.io registry-1.docker.io index.docker.io dseasb33srnrn.cloudfront.net asia-east1-docker.pkg.dev" | sudo tee -a /etc/hosts
+
+      - name: Run Offline Install Script
+        run: sudo unshare -n -- bash -c "ip link set lo up && su $(whoami) -c './scripts/29_install_local_offline.sh'"
+
+      - name: Verify Installation
+        uses: ./.github/actions/verify-install
+
+      - name: Run Offline Install Script Again (Upgrade Simulation)
+        run: sudo unshare -n -- bash -c "ip link set lo up && su $(whoami) -c './scripts/29_install_local_offline.sh'"
+
+      - name: Verify Installation After Upgrade
+        uses: ./.github/actions/verify-install

@@ -1,0 +1,2 @@
+FROM alpine/ansible:2.18.6
+RUN ansible-galaxy install geerlingguy.docker -p /usr/share/ansible/roles

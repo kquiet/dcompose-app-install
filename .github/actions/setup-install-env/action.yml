@@ -1,0 +1,16 @@
+name: 'Setup Install Environment'
+description: 'Common setup steps for installation tests: create dirs, remove docker'
+runs:
+  using: "composite"
+  steps:
+    - name: Create missing directory
+      shell: bash
+      run: mkdir -p container_images/app
+
+    - name: Uninstall pre-installed Docker
+      shell: bash
+      run: |
+        sudo apt-get remove -y docker docker-engine docker.io containerd runc || true
+        sudo apt-get purge -y docker-ce docker-ce-cli containerd.io docker-compose-plugin || true
+        sudo rm -rf /var/lib/docker
+        sudo rm -rf /var/lib/containerd

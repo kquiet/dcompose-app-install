@@ -1,0 +1,46 @@
+name: 'Verify Installation'
+description: 'Verify the successful installation of the docker compose application and related components'
+inputs:
+  ansible_image:
+    description: 'The Ansible Docker image to check for'
+    required: false
+    default: 'alpine/ansible:2.18.6'
+runs:
+  using: "composite"
+  steps:
+    - name: Verify Installation
+      shell: bash
+      run: |
+        echo "Verifying installation..."
+
+        # 1. Check Ansible Docker image
+        if ! sudo docker images | grep -q "${{ inputs.ansible_image }}"; then
+          echo "FAIL: Ansible image not found"
+          sudo docker images
+          exit 1
+        fi
+        echo "PASS: Ansible image found"
+
+        # 2. Check Docker Compose Application
+        echo "Verifying Docker Compose application..."
+        COMPOSE_LS_JSON=$(sudo docker compose ls -a --format json)
+
+        # Check if there is exactly 1 application
+        APP_COUNT=$(echo "$COMPOSE_LS_JSON" | jq 'length')
+        if [ "$APP_COUNT" -ne 1 ]; then
+            echo "FAIL: Expected exactly 1 Docker Compose application, but found $APP_COUNT"
+            echo "Output of 'docker compose ls -a --format json':"
+            echo "$COMPOSE_LS_JSON"
+            exit 1
+        fi
+
+        # Check if the status is exited(1)
+        APP_STATUS=$(echo "$COMPOSE_LS_JSON" | jq -r '.[0].Status')
+        if [[ "$APP_STATUS" != "exited(1)" ]]; then
+            echo "FAIL: Expected application status to be 'exited(1)', but got '$APP_STATUS'"
+            echo "Output of 'docker compose ls -a --format json':"
+            echo "$COMPOSE_LS_JSON"
+            exit 1
+        fi
+
+        echo "PASS: Docker compose application is successfully verified"

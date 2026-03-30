@@ -1,0 +1,8 @@
+---
+- name: "Check if OS family '{{ ansible_os_family }}' is in the required list"
+  ansible.builtin.assert:
+    that:
+      - ansible_os_family in required_os_families
+    fail_msg: |
+      This only supports '{{ required_os_families }}' OS families.
+      This host ({{ inventory_hostname }}) is '{{ ansible_os_family }}', which is not supported.

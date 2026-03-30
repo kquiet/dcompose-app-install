@@ -1,0 +1,44 @@
+---
+- name: "Check if 'try_apt_packages' is defined and is a list"
+  ansible.builtin.assert:
+    that:
+      - try_apt_packages is defined
+      - try_apt_packages is iterable
+      - try_apt_packages is not string
+      - try_apt_packages | length > 0
+    fail_msg: "The 'try_apt_packages' variable is required. It must be a non-empty list of packages."
+- name: Set default package state if not provided
+  ansible.builtin.set_fact:
+    package_state: "{{ package_state | default('present') }}"
+- name: Find missing packages
+  when: package_state == 'present'
+  block:
+    - name: Gather the package facts
+      ansible.builtin.package_facts:
+        manager: apt
+    - name: Filter list to only include packages not yet installed
+      ansible.builtin.set_fact:
+        missing_packages: "{{ try_apt_packages | difference(ansible_facts.packages.keys() | list) }}"
+- name: Determine target package list based on apt_overwrite flag
+  ansible.builtin.set_fact:
+    packages_to_install: "{{ (package_state == 'latest') | ternary(try_apt_packages, missing_packages) }}"
+- name: Print the packages to install
+  ansible.builtin.debug:
+    msg: |
+      "To install: {{ packages_to_install }}"
+- name: Process installation logic
+  when: packages_to_install | length > 0
+  block:
+    - name: Try to install packages without cache updated
+      ansible.builtin.apt:
+        name: "{{ packages_to_install }}"
+        state: "{{ package_state }}"
+        update_cache: false
+      register: apt_try
+      ignore_errors: true
+    - name: Install packages with cache updated
+      when: apt_try.failed
+      ansible.builtin.apt:
+        name: "{{ packages_to_install }}"
+        state: "{{ package_state }}"
+        update_cache: true

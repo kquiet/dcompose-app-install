@@ -1,0 +1,6 @@
+---
+- name: "Ping all servers and confirm host connectivity"
+  hosts: all
+  gather_facts: false
+  roles:
+  - ping
